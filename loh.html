@@ -1,12 +1,137 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Сердечко</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: #000;
+    }
+
+    canvas {
+      width: min(92vw, 660px);
+      height: min(82vh, 660px);
+      cursor: pointer;
+    }
+  </style>
 </head>
+
 <body>
-    
-    loh
+  <canvas id="heart"></canvas>
+
+  <script>
+    const canvas = document.querySelector("#heart");
+    const ctx = canvas.getContext("2d");
+
+    const colors = [
+      "#ff3131",
+      "#ff8c00",
+      "#ffe600",
+      "#35d04b",
+      "#23c7f3",
+      "#5478ff",
+      "#b84dff",
+      "#ff4fbd"
+    ];
+
+    let animation;
+
+    function sizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+
+      canvas.width = rect.width * ratio;
+      canvas.height = rect.height * ratio;
+
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+
+    function heartPoint(t, scale, centerX, centerY) {
+      const x = 16 * Math.sin(t) ** 3;
+
+      const y =
+        13 * Math.cos(t) -
+        5 * Math.cos(2 * t) -
+        2 * Math.cos(3 * t) -
+        Math.cos(4 * t);
+
+      return {
+        x: centerX + x * scale,
+        y: centerY - y * scale
+      };
+    }
+
+    function drawHeart() {
+      cancelAnimationFrame(animation);
+
+      sizeCanvas();
+
+      const { width, height } = canvas.getBoundingClientRect();
+
+      ctx.clearRect(0, 0, width, height);
+
+      const centerX = width / 2;
+      const centerY = height / 2 + 18;
+
+      const scale = Math.min(width, height) / 39;
+      const totalLines = 180;
+      const drawingTime = 7000;
+
+      const delayPerLine = drawingTime / totalLines;
+
+      let line = 0;
+      let lastStep = 0;
+
+      function nextLine(time) {
+        if (!lastStep) lastStep = time;
+
+        if (time - lastStep >= delayPerLine && line < totalLines) {
+          lastStep = time;
+
+          const t = (line / totalLines) * Math.PI * 2;
+          const point = heartPoint(t, scale, centerX, centerY);
+          const color = colors[line % colors.length];
+
+          ctx.beginPath();
+          ctx.moveTo(centerX, centerY);
+          ctx.lineTo(point.x, point.y);
+          ctx.strokeStyle = color;
+          ctx.globalAlpha = 0.72;
+          ctx.lineWidth = 1.25;
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, 2.6, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.globalAlpha = 1;
+          ctx.fill();
+
+          line++;
+        }
+
+        if (line < totalLines) {
+          animation = requestAnimationFrame(nextLine);
+        }
+      }
+
+      requestAnimationFrame(nextLine);
+    }
+
+    canvas.addEventListener("click", drawHeart);
+    window.addEventListener("resize", drawHeart);
+
+    drawHeart();
+  </script>
 </body>
 </html>
